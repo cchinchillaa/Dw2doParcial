@@ -23,6 +23,56 @@ if (!empty($_POST["enter"])) {
 
 ?>
 
+<?php
+
+    $message = '';
+    $username = $_POST['username'];
+    $email = $_POST['email'];
+    $password = $_POST['password'];
+    $confirm_password = $_POST['confirm_password'];
+    $token = mt_rand(100000, 999999);
+
+    $errormsg = '';
+
+
+    if (validate_empty($username, $email, $password, $confirm_password)) {
+        $message = 'Please fill all fields';
+    } elseif (!validate_confirm_password($password, $confirm_password)) {
+        $message = 'Passwords do not match';
+    } elseif (!validate_password($password, $errormsg)) {
+        $message = $errormsg;
+    } elseif (!validate_email($email)) {
+        $message = 'Please enter a valid email';
+    } elseif (!validate_unique_username($username, $conn)) {
+        $message = 'Username already exists';
+    } elseif (!validate_email_exists($email, $conn)) {
+        $message = 'Email already exists';
+    } else {
+        $sql = "INSERT INTO user_info (username,email, password,token) VALUES (:username,:email, :password,:token)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam(':username', $username);
+        $stmt->bindParam(':email', $email);
+        $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+        $stmt->bindParam(':password', $password);
+        $stmt->bindParam(':token', $token);
+        if ($stmt->execute()) :
+
+            //$subject = 'Email Confirmation';
+            //$body = 'Hi, $username. Click here to confirm your email http://localhost/confirm.php?email=$email&token=$token';
+
+            //send_Mail();
+
+
+            $message = 'Registration successful, please check your email to confirm your account';
+
+        else :
+            $message = 'Sorry there must have been an issue creating your account';
+        endif;
+    }
+
+?>
+
+
 <!DOCTYPE html>
 <html>
 
